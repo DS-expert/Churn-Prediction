@@ -1,0 +1,17 @@
+# config/config.yaml
+
+# Data Paths
+---
+
+paths:
+  train_raw_data: "data/raw/train.csv"
+  test_raw_data: "data/raw/test.csv"
+  description_of_data: "data/raw/data_description.csv"
+  preprocessed_data_dir: "data/preprocessed"
+  model_dir: "models"
+  output_dir: "output"
+
+data:
+  test_size: 0.2
+  random_state: 42
+...
