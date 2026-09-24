@@ -6,7 +6,7 @@
 paths:
   train_raw_data: "data/raw/train.csv"
   test_raw_data: "data/raw/test.csv"
-  description_of_data: "data/raw/data_description.csv"
+  description_of_data: "data/raw/data_descriptions.csv"
   preprocessed_data_dir: "data/preprocessed"
   model_dir: "models"
   output_dir: "output"
