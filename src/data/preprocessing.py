@@ -15,13 +15,13 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     returns:
         df(pd.DataFrame): DataFrame without missing value.
     """
+    df = df.copy()
 
     for feature in df.columns:
-        if df[feature].isnull().sum() > 0:
+        if df[feature].isnull().any():
             if df[feature].dtype in [int, float]:
-                df[feature] = df[feature].fillna(df[feature].mean())
+                df[feature] = df[feature].fillna(df[feature].median())
             else:
                 df[feature] = df[feature].fillna("missing")
-
-    
+            
     return df
