@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from src.utils.config import load_config
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from typing import Literal
 
 config = load_config()
 
@@ -39,3 +42,20 @@ def drop_feature(df, features: list):
 
     df_drop = df.drop(columns=features)
     return df_drop
+
+def Encoder(X, X_test, all_categorical=Literal[True, False], features=[]):
+    encoder = OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore')
+    if all_categorical == True:
+        cat_feature = X.select_dtypes(exclude='number').columns
+        encoded_df = encoder.fit_transform(X[cat_feature])
+        test_encoded_df = encoder.transform(X_test[cat_feature])
+    elif all_categorical == False:
+        if features is []:
+            raise ValueError(f"The 'features' required when all_categorical is {all_categorical}")
+        
+        encoded_df = encoder.fit_transform(X[features])
+        test_encoded_df = encoder.transform(X_test[features])
+
+    return encoded_df, test_encoded_df
+
+
