@@ -25,3 +25,17 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
                 df[feature] = df[feature].fillna("missing")
             
     return df
+
+def drop_feature(df, features: list):
+    """
+    Drop the feature from dataset
+
+    Args:
+        df(pd.DataFrame): Input dataframe to drop feature from it.
+        features(list): list of Feature which have to drop.
+    returns:
+        df(pd.DataFrame): Return dataframe without that feature.
+    """
+
+    df_drop = df.drop(columns=features)
+    return df_drop
