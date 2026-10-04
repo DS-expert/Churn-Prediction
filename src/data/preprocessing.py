@@ -58,8 +58,10 @@ def Encoder(X, X_test, all_categorical: bool = True, features=None):
 
     encoded_cols = encoder.get_feature_names_out(cat_features)
     encoded_df = pd.DataFrame(encoded_arr, columns=encoded_cols, index=X.index)
+    encoded_df = pd.concat([X.drop(columns=cat_features), encoded_df], axis=1)
     test_encoded_df = pd.DataFrame(test_encoded_arr, columns=encoded_cols, index=X_test.index) # type: ignore
-
+    test_encoded_df = pd.concat([X_test.drop(columns=cat_features), test_encoded_df], axis=1)
+    
     return encoded_df, test_encoded_df
 
 
