@@ -1,7 +1,9 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
+import pytest_check as check
 
 def test_handle_missing_values():
     # Arrange
@@ -54,3 +56,43 @@ def test_drop_feature():
 
     #assert
     assert result.shape[1] < df.shape[1], "Features still not drop from the dataframe."
+
+def test_encoder():
+    #act
+    data = {
+                "Tenure": [12, 20, 24, 5, 23, 36],
+                "MonthlyCharges": [70.5, 55.0, 45.0, 90.2, 30.0, 28.2],
+                "TotalCharges": [800.0, 200.5, 1500.0, 520.0, 400.0, 2200.0],
+                "Contract": ["Month-to-month", "One year", "Three year", "Two year", "Month-to-month", "Month-to-month"],
+                "InternetService": ["DSL", "DSL", "Fiber optic", "DSL", "Fiber optic", "Fiber optic"],
+                "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", "Debit card", "Credit card", "Electronic check"],
+                "Churn": ["Yes", "No", "No", "Yes", "No", "Yes"]
+            }
+
+    df = pd.DataFrame(data)
+    X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=["Churn"]), df["Churn"], test_size=0.2, random_state=42)
+
+    #act
+    result1, result1_test = Encoder(X_train, X_test, all_categorical=True)
+    check.equal(result1.shape[1], result1_test.shape[1], "Encoded train and test data should have the same number of columns.")
+    check.is_true(isinstance(result1, pd.DataFrame), "Encoded return value should be a DataFrame.")
+    check.is_true(isinstance(result1_test, pd.DataFrame), "Encoded return value should be a DataFrame")
+    check.greater(result1.shape[1], X_train.shape[1], "Encoded data should have more columns than the original data due to one-hot encoding.")
+    cat_features = X_train.select_dtypes(exclude='number')
+    result_cat = result1.select_dtypes(exclude='number')
+    check.greater(cat_features.shape[1], result_cat.shape[1], "Encoded categorical features should have more columns than the original category features")
+
+    with pytest.raises(ValueError):
+        Encoder(X_train, X_test, all_categorical=False)
+
+    result3, result3_test = Encoder(X_train, X_test, all_categorical=False, features=["Contract", "InternetService"])
+    check.equal(result3.shape[1], result3_test.shape[1], "Encoded train and test data should have the same number of columns.")
+    check.is_true(isinstance(result3, pd.DataFrame), "Encoded return value should be a DataFrame.")
+    check.is_true(isinstance(result3_test, pd.DataFrame), "Encoded return value should be a DataFrame")
+    check.is_in("PaymentMethod", result3.columns, f"Encoded data should contain PaymentMethod columns, but it is missing")
+    print(X_train["PaymentMethod"].dtype)
+    print(result3["PaymentMethod"].dtype)
+    check.equal(X_train["PaymentMethod"].dtype, result3["PaymentMethod"].dtype, "Encoded data should have the same data types as the original data")
+    forbidden_cols = [col for col in result3.columns if col.startswith("PaymentMethod_")]
+    check.equal(len(forbidden_cols), 0, "Encoded data should not contain extra columns which isn't provided.")
+    pd.testing.assert_series_equal(result3["PaymentMethod"], X_train["PaymentMethod"])
