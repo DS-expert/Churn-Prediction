@@ -43,18 +43,22 @@ def drop_feature(df, features: list):
     df_drop = df.drop(columns=features)
     return df_drop
 
-def Encoder(X, X_test, all_categorical=Literal[True, False], features=[]):
-    encoder = OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore')
-    if all_categorical == True:
-        cat_feature = X.select_dtypes(exclude='number').columns
-        encoded_df = encoder.fit_transform(X[cat_feature])
-        test_encoded_df = encoder.transform(X_test[cat_feature])
-    elif all_categorical == False:
-        if features is []:
-            raise ValueError(f"The 'features' required when all_categorical is {all_categorical}")
-        
-        encoded_df = encoder.fit_transform(X[features])
-        test_encoded_df = encoder.transform(X_test[features])
+def Encoder(X, X_test, all_categorical: bool = True, features=None):
+    encoder = OneHotEncoder(drop="first", sparse_output=False, handle_unknown='ignore')
+
+    if all_categorical:
+        cat_features = X.select_dtypes(exclude='number').columns
+    else:
+        if not features:
+            raise ValueError("Please provide the list of categorical features to encode.")
+        cat_features = features
+
+    encoded_arr = encoder.fit_transform(X[cat_features])
+    test_encoded_arr = encoder.transform(X_test[cat_features])
+
+    encoded_cols = encoder.get_feature_names_out(cat_features)
+    encoded_df = pd.DataFrame(encoded_arr, columns=encoded_cols, index=X.index)
+    test_encoded_df = pd.DataFrame(test_encoded_arr, columns=encoded_cols, index=X_test.index) # type: ignore
 
     return encoded_df, test_encoded_df
 
