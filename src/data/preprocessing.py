@@ -105,6 +105,7 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
         num_features = num_features.drop(target)
     
     handle_missing_transformer = FunctionTransformer(handle_missing_values)
+    remove_outlier_transformer = FunctionTransformer(remove_outliers, kw_args={"features": num_features.tolist()})
 
     categoircal_pipeline = Pipeline(steps=[
         ('missing_handle_values', handle_missing_transformer),
@@ -113,6 +114,7 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
 
     numerical_pipeline = Pipeline(steps=[
         ("missing_handle_values", handle_missing_transformer),
+        ("outlier remover", remove_outlier_transformer),
         ("Scaler", StandardScaler())
     ])
 
@@ -126,12 +128,14 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
     X = df.drop(columns=[target])
     y = df[target]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
 
     X_train = preprocesser.fit_transform(X_train)
     X_test = preprocesser.transform(X_test)
+    X_val = preprocesser.transform(X_val)
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_val, X_test, y_train, y_val, y_test
 
 # Function for Outliers Removal
 # Function for Validation set and transform in preprocesser() function.
