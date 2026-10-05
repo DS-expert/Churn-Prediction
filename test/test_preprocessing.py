@@ -1,5 +1,5 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, preprocesser
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, preprocesser, remove_outliers
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -141,3 +141,33 @@ def test_preprocesser():
     check.greater(X_train.shape[1], df.shape[1], "Preprocessed data should have more features than original data")
     check.equal(pd.isnull(X_train).any(), False, "Preprocessed data should not have any missing values") # type: ignore
     check.equal(X_train.shape[1], X_test.shape[1], "Preprocessed train and test data should have the same number of features")
+
+def test_remove_outliers():
+    #arrange
+    test_features_data = {
+    "feature_A": [10.2, 11.1, 10.5, 10.8, 11.0],  # Normal data (around 10-11)
+    "feature_B": [20.5, 19.8, 21.0, 20.2, 19.9],  # Normal data (around 20)
+    "feature_C": [10.1, 10.5, 950.0, 10.3, 10.9], # OUTLIER: 950.0 is abnormally high
+    "feature_D": [15.2, 14.8, 15.1, 15.5, 14.9],  # Normal data (around 15)
+    "feature_E": [50.1, 49.8, -800.0, 50.5, 50.2] # OUTLIER: -800.0 is abnormally low
+    }
+    df = pd.DataFrame(test_features_data)
+    print(df.shape)
+    #act
+    result = remove_outliers(df, features=["feature_C", "feature_E"])
+    print(result)
+    print(result.shape)
+
+    #assert
+    check.is_instance(result, pd.DataFrame, "Result should be a DataFrame after removing outliers")
+    check.equal(df.shape[1], result.shape[1], "Result should have same features as original data.")
+
+    Q1 = df["feature_C"].quantile(0.25)
+    Q3 = df["feature_C"].quantile(0.75)
+
+    IQR = Q3 - Q1
+    lower_bound_c = Q1 - 1.5 * IQR
+    upper_bound_c = Q3 + 1.5 * IQR
+
+    check.equal((result["feature_C"] > upper_bound_c).any(), False, "Result dataframe should not have upper_bound outliers in feature")
+    check.equal((result["feature_C"] < lower_bound_c).any(), False, "Result should have not value lower than lower_bound in feature")

@@ -163,7 +163,7 @@ def remove_outliers(df: pd.DataFrame, features: list):
     for feature in features:
         lower_bound, upper_bound = bound_dictionary[f"{feature}_bounds"]
         capper = ArbitraryOutlierCapper(max_capping_dict={feature: upper_bound}, min_capping_dict={feature: lower_bound})
-        df_without_outliers = capper.fit_transform(df[[feature]])
+        df[[feature]] = capper.fit_transform(df[[feature]])
 
-    return df_without_outliers
+    return df
 
