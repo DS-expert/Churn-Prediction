@@ -64,4 +64,11 @@ def Encoder(X, X_test, all_categorical: bool = True, features=None):
     
     return encoded_df, test_encoded_df
 
+def scaling(X, X_test):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    X_test_scaled = scaler.transform(X_test)
+
+    return X_scaled, X_test_scaled
+
 
