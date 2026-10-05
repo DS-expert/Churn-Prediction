@@ -3,7 +3,9 @@ import numpy as np
 from src.utils.config import load_config
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 from typing import Literal
+from sklearn.model_selection import train_test_split
 
 config = load_config()
 
@@ -71,4 +73,60 @@ def scaling(X, X_test):
 
     return X_scaled, X_test_scaled
 
+def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True, features=None):
+    """
+    Preprocess the data by handling missing values, encoding_categorical features, and scaling numercal features.
+    Args:
+        df(pd.DataFrame): Input dataframe to preprocess.
+        target(str): Name of the target variable.
+        all_categorical(bool): If true all categorical features will be encoded, otherwise only the features provided in the list will be encoded.
+        features(list): List of features to encode if all_categorical is False.
+    
+    Returns:
+        X_train(np.ndarray): Preprocessed training features.
+        X_test(np.ndarray): Preprocessed testing features.
+        y_train(np.ndarray): Training target variable.
+        y_test(np.ndarray): Testing target variable.
+    """
+
+    if all_categorical:
+        cat_features = df.select_dtypes(exclude='number').columns
+        if target in cat_features:
+            cat_features = cat_features.drop(target)
+    else:
+        if not features:
+            raise ValueError("Please provide the list of categorical features to encode.")
+        cat_features = features
+
+    num_features = df.select_dtypes(include='number').columns
+
+    if target in num_features:
+        num_features = num_features.drop(target)
+
+    categoircal_pipeline = Pipeline(steps=[
+        ('missing_handle_values', handle_missing_values),
+        ('encoder', OneHotEncoder(drop='first', sparse_output=False))
+    ])
+
+    numerical_pipeline = Pipeline(steps=[
+        ("missing_handle_values", handle_missing_values),
+        ("Scaler", StandardScaler())
+    ])
+
+    preprocesser = ColumnTransformer(
+        transformers=[
+            ("categoircal_pipeline", categoircal_pipeline, cat_features),
+            ("Numerical pipeline", numerical_pipeline, num_features)
+        ], remainder='passthrough'
+    )
+
+    X = df.drop(columns=[target])
+    y = df[target]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    X_train = preprocesser.fit_transform(X_train)
+    X_test = preprocesser.transform(X_test)
+
+    return X_train, X_test, y_train, y_test
 
