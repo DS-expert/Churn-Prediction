@@ -1,9 +1,10 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature, Encoder
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import pytest_check as check
+import numpy as np
 
 def test_handle_missing_values():
     # Arrange
@@ -96,3 +97,24 @@ def test_encoder():
     forbidden_cols = [col for col in result3.columns if col.startswith("PaymentMethod_")]
     check.equal(len(forbidden_cols), 0, "Encoded data should not contain extra columns which isn't provided.")
     pd.testing.assert_series_equal(result3["PaymentMethod"], X_train["PaymentMethod"])
+
+def test_scaling():
+    #arrange
+    data = {
+                "Tenure": [12, 20, 24, 5, 23, 36],
+                "MonthlyCharges": [70.5, 55.0, 45.0, 90.2, 30.0, 28.2],
+                "TotalCharges": [800.0, 200.5, 1500.0, 520.0, 400.0, 2200.0]
+            }
+
+    # dataframe
+    df = pd.DataFrame(data)
+    X_train, X_test, y_train, y_test = train_test_split(df, np.random.randint(0, 2, size=len(df)), test_size=0.2, random_state=42)
+
+    #act
+    result1, result1_test = scaling(X_train, X_test)
+
+    #assert
+    check.is_instance(result1, np.ndarray, "Scaled return value should be a numpy array.")
+    check.is_instance(result1_test, np.ndarray, "Scaled return value should be a numpy array.")
+    check.equal(result1.shape[1], result1_test.shape[1], "Scaled train and test data should have the same number of features.")
+    check.equal(result1.shape[1], X_train.shape[1], "Scaled data should have the same number of features as the original data.")
