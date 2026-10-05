@@ -107,7 +107,7 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
 
     categoircal_pipeline = Pipeline(steps=[
         ('missing_handle_values', handle_missing_transformer),
-        ('encoder', OneHotEncoder(drop='first', sparse_output=False))
+        ('encoder', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'))
     ])
 
     numerical_pipeline = Pipeline(steps=[
