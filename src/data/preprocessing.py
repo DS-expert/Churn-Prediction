@@ -167,3 +167,18 @@ def remove_outliers(df: pd.DataFrame, features: list):
 
     return df
 
+def validation_set(X_train, y_train):
+    """
+    Validation set for the training data.
+    args:
+        X_train: training features.
+        y_train: training target labels.
+    return:
+        X_train: training features
+        X_val: validation features
+        y_train: training target labels
+        y_val: validation target labels
+     """
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
+
+    return X_train, X_val, y_train, y_val
