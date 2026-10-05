@@ -132,3 +132,5 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
 
     return X_train, X_test, y_train, y_test
 
+# Function for Outliers Removal
+# Function for Validation set and transform in preprocesser() function.
