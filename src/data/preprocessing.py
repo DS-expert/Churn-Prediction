@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from src.utils.config import load_config
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from typing import Literal
@@ -102,14 +102,16 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
 
     if target in num_features:
         num_features = num_features.drop(target)
+    
+    handle_missing_transformer = FunctionTransformer(handle_missing_values)
 
     categoircal_pipeline = Pipeline(steps=[
-        ('missing_handle_values', handle_missing_values),
+        ('missing_handle_values', handle_missing_transformer),
         ('encoder', OneHotEncoder(drop='first', sparse_output=False))
     ])
 
     numerical_pipeline = Pipeline(steps=[
-        ("missing_handle_values", handle_missing_values),
+        ("missing_handle_values", handle_missing_transformer),
         ("Scaler", StandardScaler())
     ])
 
