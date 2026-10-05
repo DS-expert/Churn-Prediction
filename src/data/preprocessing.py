@@ -6,6 +6,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from typing import Literal
 from sklearn.model_selection import train_test_split
+from feature_engine.outliers import ArbitraryOutlierCapper
 
 config = load_config()
 
@@ -134,3 +135,35 @@ def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True,
 
 # Function for Outliers Removal
 # Function for Validation set and transform in preprocesser() function.
+
+def remove_outliers(df: pd.DataFrame, features: list):
+    """
+    Remove outliers from the dataframe using the IQR method.
+    
+    Args:
+        df(pd.DataFrame): Input dataframe to remove outliers from.
+        features(list): list of features to check for outliers.
+    Returns:
+        df(pd.DataFrame): Dataframe without outliers.
+    """
+
+    def find_lower_upper_bound(feature):
+        Q1 = df[feature].quantile(0.25)
+        Q3 = df[feature].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        return lower_bound, upper_bound
+
+    bound_dictionary = {}
+    for feature in features:
+        lower_bound, upper_bound = find_lower_upper_bound(feature)
+        bound_dictionary[f"{feature}_bounds"] = (lower_bound, upper_bound)
+
+    for feature in features:
+        lower_bound, upper_bound = bound_dictionary[f"{feature}_bounds"]
+        capper = ArbitraryOutlierCapper(max_capping_dict={feature: upper_bound}, min_capping_dict={feature: lower_bound})
+        df_without_outliers = capper.fit_transform(df[[feature]])
+
+    return df_without_outliers
+
