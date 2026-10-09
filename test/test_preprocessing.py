@@ -119,29 +119,6 @@ def test_scaling():
     check.equal(result1.shape[1], result1_test.shape[1], "Scaled train and test data should have the same number of features.")
     check.equal(result1.shape[1], X_train.shape[1], "Scaled data should have the same number of features as the original data.")
 
-def test_preprocesser():
-    #arrange
-    data = {
-            "Tenure": [12, np.nan, 24, 5, np.nan, 36],
-            "MonthlyCharges": [70.5, 55.0, np.nan, 90.2, 30.0, np.nan],
-            "TotalCharges": [800.0, 200.5, 1500.0, np.nan, 400.0, 2200.0],
-            "Contract": ["Month-to-month", "One year", np.nan, "Two year", "Month-to-month", np.nan],
-            "InternetService": ["DSL", np.nan, "Fiber optic", "DSL", np.nan, "Fiber optic"],
-            "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", np.nan, "Credit card", "Electronic check"],
-            "Churn": ["Yes", "No", "No", "Yes", "No", "Yes"]
-        }
-    df = pd.DataFrame(data)
-
-    #act
-    X_train, X_test, y_train, y_test = preprocesser(df, target="Churn")
-
-    #assert
-    check.is_instance(X_train, np.ndarray, "Preprocessed return value should be a numpy")
-    check.is_instance(y_train, pd.Series, "testing label should be pd.Series")
-    check.greater(X_train.shape[1], df.shape[1], "Preprocessed data should have more features than original data")
-    check.equal(pd.isnull(X_train).any(), False, "Preprocessed data should not have any missing values") # type: ignore
-    check.equal(X_train.shape[1], X_test.shape[1], "Preprocessed train and test data should have the same number of features")
-
 def test_remove_outliers():
     #arrange
     test_features_data = {

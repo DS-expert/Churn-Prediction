@@ -74,73 +74,11 @@ def scaling(X, X_test):
 
     return X_scaled, X_test_scaled
 
-def preprocesser(df: pd.DataFrame, target="Churn", all_categorical: bool = True, features=None):
-    """
-    Preprocess the data by handling missing values, encoding_categorical features, and scaling numercal features.
-    Args:
-        df(pd.DataFrame): Input dataframe to preprocess.
-        target(str): Name of the target variable.
-        all_categorical(bool): If true all categorical features will be encoded, otherwise only the features provided in the list will be encoded.
-        features(list): List of features to encode if all_categorical is False.
-    
-    Returns:
-        X_train(np.ndarray): Preprocessed training features.
-        X_test(np.ndarray): Preprocessed testing features.
-        y_train(np.ndarray): Training target variable.
-        y_test(np.ndarray): Testing target variable.
-    """
-
-    if all_categorical:
-        cat_features = df.select_dtypes(exclude='number').columns
-        if target in cat_features:
-            cat_features = cat_features.drop(target)
-    else:
-        if not features:
-            raise ValueError("Please provide the list of categorical features to encode.")
-        cat_features = features
-
-    num_features = df.select_dtypes(include='number').columns
-
-    if target in num_features:
-        num_features = num_features.drop(target)
-    
-    handle_missing_transformer = FunctionTransformer(handle_missing_values)
-    remove_outlier_transformer = FunctionTransformer(remove_outliers, kw_args={"features": num_features.tolist()})
-
-    categoircal_pipeline = Pipeline(steps=[
-        ('missing_handle_values', handle_missing_transformer),
-        ('encoder', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'))
-    ])
-
-    numerical_pipeline = Pipeline(steps=[
-        ("missing_handle_values", handle_missing_transformer),
-        ("outlier remover", remove_outlier_transformer),
-        ("Scaler", StandardScaler())
-    ])
-
-    preprocesser = ColumnTransformer(
-        transformers=[
-            ("categoircal_pipeline", categoircal_pipeline, cat_features),
-            ("Numerical pipeline", numerical_pipeline, num_features)
-        ], remainder='passthrough'
-    )
-
-    X = df.drop(columns=[target])
-    y = df[target]
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
-
-    X_train = preprocesser.fit_transform(X_train)
-    X_test = preprocesser.transform(X_test)
-    X_val = preprocesser.transform(X_val)
-
-    return X_train, X_val, X_test, y_train, y_val, y_test
 
 # Function for Outliers Removal
 # Function for Validation set and transform in preprocesser() function.
 
-def remove_outliers(df: pd.DataFrame, features: list):
+def remove_outliers(df: pd.DataFrame, features=None):
     """
     Remove outliers from the dataframe using the IQR method.
     
@@ -158,6 +96,14 @@ def remove_outliers(df: pd.DataFrame, features: list):
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
         return lower_bound, upper_bound
+
+    if features is not None:
+        features = [col for col in features if col in df.columns]
+    else:
+        features = df.select_dtypes(include='number').columns.tolist()
+    
+    if not features:
+        return df
 
     bound_dictionary = {}
     for feature in features:
@@ -186,3 +132,5 @@ def validation_set(X_train, y_train):
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
 
     return X_train, X_val, y_train, y_val
+
+# have error with remove_outliers() func when using in preprocesser() function. It is not working properly. need to check it.
