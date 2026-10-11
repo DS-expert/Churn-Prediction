@@ -171,3 +171,5 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
         return df_semi_prep_without_outliers, test_df_semi_prep
 
     return df_semi_prep_without_outliers
+
+# Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
