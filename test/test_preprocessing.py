@@ -1,5 +1,5 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, preprocesser, remove_outliers
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, remove_outliers
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split

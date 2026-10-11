@@ -134,3 +134,40 @@ def validation_set(X_train, y_train):
     return X_train, X_val, y_train, y_val
 
 # have error with remove_outliers() func when using in preprocesser() function. It is not working properly. need to check it.
+
+def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=None):
+    """
+    Preprocessing pipeline will preprocess the dataframe.
+
+    args:
+        df(pd.DataFrame): Input dataframe.
+        testing_dataframe: If you have test dataset or dataframe.
+    
+    returns:
+        X_train(np.ndarray): return train dataset numpy array.
+        X_test(np.ndarray): return test dataset numpy array.
+        X_val(np.ndarray): return validation dataset.
+        y_train(np.ndarray): return training labels of dataset.
+        y_test(np.ndarray): return testing labels of datasets.
+        y_val(np.ndarray): return validation label of dataset
+    """
+
+    # Handle missing values
+    df_semi_prep = handle_missing_values(df=df)
+    if test_dataset is not None:
+        test_df_semi_prep = handle_missing_values(test_dataset)
+    # drop features from dataset if have
+    if drop_features is not None:
+        df_semi_prep = drop_feature(df, features=drop_features)
+        test_df_semi_prep = drop_feature(df, features=drop_features)
+
+    cat_features = df.select_dtypes(exclude='number').columns.tolist()
+    num_features = df.select_dtypes(include='number').columns.tolist()
+
+    # remove outliers from dataset
+    df_semi_prep_without_outliers = remove_outliers(df_semi_prep)
+
+    if test_dataset is not None:
+        return df_semi_prep_without_outliers, test_df_semi_prep
+
+    return df_semi_prep_without_outliers
