@@ -1,5 +1,5 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, remove_outliers
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, remove_outliers, preprocessing_pipeline
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -148,3 +148,90 @@ def test_remove_outliers():
 
     check.equal((result["feature_C"] > upper_bound_c).any(), False, "Result dataframe should not have upper_bound outliers in feature")
     check.equal((result["feature_C"] < lower_bound_c).any(), False, "Result should have not value lower than lower_bound in feature")
+
+def test_preprocessing_pipeline():
+    #arrange
+    train_features_data = {
+        "feature_A": [10.2, 11.1, 10.5, 10.8, 11.0, 10.5],  # Normal data (around 10-11)
+        "feature_B": [20.5, 19.8, 21.0, 20.2, 19.9, 22.0],  # Normal data (around 20)
+        "feature_C": [10.1, 10.5, 950.0, 10.3, 10.9, 11.1], # OUTLIER: 950.0 is abnormally high
+        "feature_D": [15.2, 14.8, 15.1, 15.5, 14.9, 15.6],  # Normal data (around 15)
+        "feature_E": [50.1, 49.8, -800.0, 50.5, 50.2, 50.4],
+        "Contract": ["Month-to-month", "One year", np.nan, "Two year", "Month-to-month", np.nan],
+        "InternetService": ["DSL", np.nan, "Fiber optic", "DSL", np.nan, "Fiber optic"],
+        "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", np.nan, "Credit card", "Electronic check"],
+        "Churn": ["Yes", "No", "No", "Yes", "No", "Yes"] # OUTLIER: -800.0 is abnormally low
+        }
+
+    test_features_data = {
+            "feature_A": [10.2, 11.1, 10.5, 10.8],  # Normal data (around 10-11)
+            "feature_B": [20.5, 19.8, 21.0, 20.2],  # Normal data (around 20)
+            "feature_C": [10.1, 10.5, 950.0, 10.3], # OUTLIER: 950.0 is abnormally high
+            "feature_D": [15.2, 14.8, 15.1, 15.5],  # Normal data (around 15)
+            "feature_E": [50.1, 49.8, -800.0, 50.5],
+            "Contract": ["Month-to-month", "One year", np.nan, "Two year"],
+            "InternetService": ["DSL", np.nan, "Fiber optic", "DSL"],
+            "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", np.nan],
+            "Churn": ["Yes", "No", "No", "Yes"] # OUTLIER: -800.0 is abnormally low
+            }
+
+    df = pd.DataFrame(train_features_data)
+    test_df = pd.DataFrame(test_features_data)
+    #act
+    result1 = preprocessing_pipeline(df)
+
+    check.is_instance(result1, pd.DataFrame, "Return result should be in dataframe")
+    check.equal(df.shape[0], result1.shape[0], "Input dataset and return dataset should have same rows or instances.")
+    check.equal(df.shape[1], result1.shape[1], "Both dataset should have same features")
+
+    # check missing values
+    cat_cols = df.select_dtypes(exclude="number").columns
+    check.equal((result1[cat_cols] == "missing").any().any(), True, "In dataframe there should be not have any missing values")
+
+    # check test for outliers
+    Q1 = df["feature_C"].quantile(0.25)
+    Q3 = df["feature_C"].quantile(0.75)
+
+    IQR = Q3 - Q1
+    lower_bound_C = Q1 - 1.5 * IQR
+    upper_bound_C = Q3 + 1.5 * IQR
+    print(f"Result feature C: \n{result1["feature_C"]}")
+    print(f"Lower bound of result feature_C: {lower_bound_C}")
+    print(f"Upper bound of result feature C: {upper_bound_C}")
+
+    check.equal((result1["feature_C"] < lower_bound_C).any(), False, "In feature there shouldn't be a lower value from lower bound.")
+    check.equal((result1["feature_C"] > upper_bound_C).any(), False, "In feature there shouldn't be upper value from upper bound.")
+
+    
+    result2, test_result2 = preprocessing_pipeline(df=df, test_dataset=test_df)
+
+    check.is_instance(result2, pd.DataFrame, "Return result should be a DataFrame.")
+    check.is_instance(test_result2, pd.DataFrame, "Return test result should be a DataFrame")
+
+    # check missing value in test result
+    cat_cols = test_df.select_dtypes(exclude="number").columns
+
+    check.equal((test_result2[cat_cols] == "missing").any().any(), True, "There shouldn't be a missing valueu in dataset.")
+
+    # check outlier in test result
+    Q1 = test_df["feature_C"].quantile(0.25)
+    Q3 = test_df["feature_C"].quantile(0.75)
+
+    IQR = Q3 - Q1
+    lower_bound_test = Q1 - 1.5 * IQR
+    upper_bound_test = Q3 + 1.5 * IQR
+
+    print(test_result2["feature_C"])
+    print(f"Lower bound of test feature_C: {lower_bound_test}")
+    print(f"Upper bound of test feature_C: {upper_bound_test}")
+
+    check.equal((test_result2["feature_C"] < lower_bound_test).any(), False, "In testing there should be a lower outliers from lower bound..")
+    check.equal((test_result2["feature_C"] > upper_bound_test).any(), True, "In testing there should be a upper value from upper_bound.")
+
+    result3, test_result3 = preprocessing_pipeline(df=df, test_dataset=test_df, drop_features=["feature_C"])
+
+    # check shape for both result and test result
+    check.greater(df.shape[1], result3.shape[1], "There should be less feature in results")
+    check.greater(test_df.shape[1], test_result3.shape[1], "There should be less feature in test results")
+    check.equal(result3.shape[1], test_result3.shape[1], "Both result and test result should have same features.")
+    
