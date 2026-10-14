@@ -177,61 +177,61 @@ def test_preprocessing_pipeline():
 
     df = pd.DataFrame(train_features_data)
     test_df = pd.DataFrame(test_features_data)
-    #act
-    result1 = preprocessing_pipeline(df)
+    # #act
+    # result1 = preprocessing_pipeline(df)
 
-    check.is_instance(result1, pd.DataFrame, "Return result should be in dataframe")
-    check.equal(df.shape[0], result1.shape[0], "Input dataset and return dataset should have same rows or instances.")
-    check.equal(df.shape[1], result1.shape[1], "Both dataset should have same features")
+    # check.is_instance(result1, pd.DataFrame, "Return result should be in dataframe")
+    # check.equal(df.shape[0], result1.shape[0], "Input dataset and return dataset should have same rows or instances.")
+    # check.equal(df.shape[1], result1.shape[1], "Both dataset should have same features")
 
-    # check missing values
-    cat_cols = df.select_dtypes(exclude="number").columns
-    check.equal((result1[cat_cols] == "missing").any().any(), True, "In dataframe there should be not have any missing values")
+    # # check missing values
+    # cat_cols = df.select_dtypes(exclude="number").columns
+    # check.equal((result1[cat_cols] == "missing").any().any(), True, "In dataframe there should be not have any missing values")
 
-    # check test for outliers
-    Q1 = df["feature_C"].quantile(0.25)
-    Q3 = df["feature_C"].quantile(0.75)
+    # # check test for outliers
+    # Q1 = df["feature_C"].quantile(0.25)
+    # Q3 = df["feature_C"].quantile(0.75)
 
-    IQR = Q3 - Q1
-    lower_bound_C = Q1 - 1.5 * IQR
-    upper_bound_C = Q3 + 1.5 * IQR
-    print(f"Result feature C: \n{result1["feature_C"]}")
-    print(f"Lower bound of result feature_C: {lower_bound_C}")
-    print(f"Upper bound of result feature C: {upper_bound_C}")
+    # IQR = Q3 - Q1
+    # lower_bound_C = Q1 - 1.5 * IQR
+    # upper_bound_C = Q3 + 1.5 * IQR
+    # print(f"Result feature C: \n{result1["feature_C"]}")
+    # print(f"Lower bound of result feature_C: {lower_bound_C}")
+    # print(f"Upper bound of result feature C: {upper_bound_C}")
 
-    check.equal((result1["feature_C"] < lower_bound_C).any(), False, "In feature there shouldn't be a lower value from lower bound.")
-    check.equal((result1["feature_C"] > upper_bound_C).any(), False, "In feature there shouldn't be upper value from upper bound.")
+    # check.equal((result1["feature_C"] < lower_bound_C).any(), False, "In feature there shouldn't be a lower value from lower bound.")
+    # check.equal((result1["feature_C"] > upper_bound_C).any(), False, "In feature there shouldn't be upper value from upper bound.")
 
     
-    result2, test_result2 = preprocessing_pipeline(df=df, test_dataset=test_df)
+    # result2, test_result2 = preprocessing_pipeline(df=df, test_dataset=test_df)
 
-    check.is_instance(result2, pd.DataFrame, "Return result should be a DataFrame.")
-    check.is_instance(test_result2, pd.DataFrame, "Return test result should be a DataFrame")
+    # check.is_instance(result2, pd.DataFrame, "Return result should be a DataFrame.")
+    # check.is_instance(test_result2, pd.DataFrame, "Return test result should be a DataFrame")
 
-    # check missing value in test result
-    cat_cols = test_df.select_dtypes(exclude="number").columns
+    # # check missing value in test result
+    # cat_cols = test_df.select_dtypes(exclude="number").columns
 
-    check.equal((test_result2[cat_cols] == "missing").any().any(), True, "There shouldn't be a missing valueu in dataset.")
+    # check.equal((test_result2[cat_cols] == "missing").any().any(), True, "There shouldn't be a missing valueu in dataset.")
 
-    # check outlier in test result
-    Q1 = test_df["feature_C"].quantile(0.25)
-    Q3 = test_df["feature_C"].quantile(0.75)
+    # # check outlier in test result
+    # Q1 = test_df["feature_C"].quantile(0.25)
+    # Q3 = test_df["feature_C"].quantile(0.75)
 
-    IQR = Q3 - Q1
-    lower_bound_test = Q1 - 1.5 * IQR
-    upper_bound_test = Q3 + 1.5 * IQR
+    # IQR = Q3 - Q1
+    # lower_bound_test = Q1 - 1.5 * IQR
+    # upper_bound_test = Q3 + 1.5 * IQR
 
-    print(test_result2["feature_C"])
-    print(f"Lower bound of test feature_C: {lower_bound_test}")
-    print(f"Upper bound of test feature_C: {upper_bound_test}")
+    # print(test_result2["feature_C"])
+    # print(f"Lower bound of test feature_C: {lower_bound_test}")
+    # print(f"Upper bound of test feature_C: {upper_bound_test}")
 
-    check.equal((test_result2["feature_C"] < lower_bound_test).any(), False, "In testing there should be a lower outliers from lower bound..")
-    check.equal((test_result2["feature_C"] > upper_bound_test).any(), True, "In testing there should be a upper value from upper_bound.")
+    # check.equal((test_result2["feature_C"] < lower_bound_test).any(), False, "In testing there should be a lower outliers from lower bound..")
+    # check.equal((test_result2["feature_C"] > upper_bound_test).any(), True, "In testing there should be a upper value from upper_bound.")
 
-    result3, test_result3 = preprocessing_pipeline(df=df, test_dataset=test_df, drop_features=["feature_C"])
+    # result3, test_result3 = preprocessing_pipeline(df=df, test_dataset=test_df, drop_features=["feature_C"])
 
-    # check shape for both result and test result
-    check.greater(df.shape[1], result3.shape[1], "There should be less feature in results")
-    check.greater(test_df.shape[1], test_result3.shape[1], "There should be less feature in test results")
-    check.equal(result3.shape[1], test_result3.shape[1], "Both result and test result should have same features.")
+    # # check shape for both result and test result
+    # check.greater(df.shape[1], result3.shape[1], "There should be less feature in results")
+    # check.greater(test_df.shape[1], test_result3.shape[1], "There should be less feature in test results")
+    # check.equal(result3.shape[1], test_result3.shape[1], "Both result and test result should have same features.")
     

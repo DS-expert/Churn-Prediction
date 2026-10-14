@@ -46,7 +46,7 @@ def drop_feature(df, features: list):
     df_drop = df.drop(columns=features)
     return df_drop
 
-def Encoder(X, X_test, all_categorical: bool = True, features=None):
+def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
     encoder = OneHotEncoder(drop="first", sparse_output=False, handle_unknown='ignore')
 
     if all_categorical:
@@ -58,12 +58,20 @@ def Encoder(X, X_test, all_categorical: bool = True, features=None):
 
     encoded_arr = encoder.fit_transform(X[cat_features])
     test_encoded_arr = encoder.transform(X_test[cat_features])
+    if X_val is not None:
+        val_encoded_arr = encoder.transform(X_val[cat_features])
 
     encoded_cols = encoder.get_feature_names_out(cat_features)
     encoded_df = pd.DataFrame(encoded_arr, columns=encoded_cols, index=X.index)
     encoded_df = pd.concat([X.drop(columns=cat_features), encoded_df], axis=1)
     test_encoded_df = pd.DataFrame(test_encoded_arr, columns=encoded_cols, index=X_test.index) # type: ignore
     test_encoded_df = pd.concat([X_test.drop(columns=cat_features), test_encoded_df], axis=1)
+    if X_val is not None:
+        val_encoded_df = pd.DataFrame(val_encoded_arr, columns=encoded_cols, index=X_val.index)
+        val_encoded_df = pd.concat([X_val.drop(columns=cat_features), val_encoded_df], axis=1)
+
+    if X_val is not None:
+        return encoded_df, val_encoded_df, test_encoded_df
     
     return encoded_df, test_encoded_df
 
@@ -135,7 +143,7 @@ def validation_set(X_train, y_train):
 
 # have error with remove_outliers() func when using in preprocesser() function. It is not working properly. need to check it.
 
-def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=None):
+def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=None, target_feature="Churn"):
     """
     Preprocessing pipeline will preprocess the dataframe.
 
@@ -167,9 +175,17 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
     # remove outliers from dataset
     df_semi_prep_without_outliers = remove_outliers(df_semi_prep)
 
+    # Split the data into train, VAl and testing
     if test_dataset is not None:
-        return df_semi_prep_without_outliers, test_df_semi_prep
+        X_train = df.drop(columns=[target_feature])
+        y_train = df[target_feature]
+        X_test = test_dataset
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target_feature]), df[target_feature], test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
 
-    return df_semi_prep_without_outliers
+    # then split into train and validation set
+    X_train, X_val, y_train, y_test = validation_set(X_train=X_train, y_train=y_train)
 
+    pass
+    
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
