@@ -69,11 +69,13 @@ def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
     if X_val is not None:
         val_encoded_df = pd.DataFrame(val_encoded_arr, columns=encoded_cols, index=X_val.index)
         val_encoded_df = pd.concat([X_val.drop(columns=cat_features), val_encoded_df], axis=1)
-
+        X_val_encoded = val_encoded_df.to_numpy()
+    X_encoded = encoded_df.to_numpy()
+    X_test_encoded = test_encoded_df.to_numpy()
     if X_val is not None:
-        return encoded_df, val_encoded_df, test_encoded_df
+        return X_encoded, X_val_encoded, X_test_encoded
     
-    return encoded_df, test_encoded_df
+    return X_encoded, X_test_encoded
 
 def scaling(X, X_test):
     scaler = StandardScaler()
@@ -186,6 +188,5 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
     # then split into train and validation set
     X_train, X_val, y_train, y_test = validation_set(X_train=X_train, y_train=y_train)
 
-    pass
     
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
