@@ -199,10 +199,7 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
     # Scaling
     X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
 
-    if test_dataset is not None:
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val
-    else:
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
+    return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
 
 
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
