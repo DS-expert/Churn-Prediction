@@ -74,15 +74,19 @@ def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
     X_test_encoded = test_encoded_df.to_numpy()
     if X_val is not None:
         return X_encoded, X_val_encoded, X_test_encoded
-    
-    return X_encoded, X_test_encoded
+    else:
+        return X_encoded, X_test_encoded
 
-def scaling(X, X_test):
+def scaling(X, X_test, X_val=None):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     X_test_scaled = scaler.transform(X_test)
 
-    return X_scaled, X_test_scaled
+    if X_val is not None:
+        X_val_scaled = scaler.transform(X_val)
+        return X_scaled, X_val_scaled, X_test_scaled
+    else:
+        return X_scaled, X_test_scaled
 
 
 # Function for Outliers Removal
@@ -186,7 +190,18 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
         X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target_feature]), df[target_feature], test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
 
     # then split into train and validation set
-    X_train, X_val, y_train, y_test = validation_set(X_train=X_train, y_train=y_train)
+    X_train, X_val, y_train, y_val = validation_set(X_train=X_train, y_train=y_train)
 
-    
+    #Encode the Split data
+    X_train_encoded, X_val_encoded, X_test_encoded = Encoder(X_train, X_test, X_val=X_val)
+
+    # Scaling
+    X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
+
+    if test_dataset is not None:
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val
+    else:
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
+
+
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
