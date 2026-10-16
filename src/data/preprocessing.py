@@ -7,6 +7,7 @@ from sklearn.pipeline import Pipeline
 from typing import Literal
 from sklearn.model_selection import train_test_split
 from feature_engine.outliers import ArbitraryOutlierCapper
+import joblib
 
 config = load_config()
 
@@ -205,3 +206,14 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
 
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
+
+def save_preprocessed_data(path: str, X, X_test, y_train, y_test, X_val=None, y_val=None):
+    joblib.dump(X, path + "X_train.npy")
+    joblib.dump(X_test, path + "X_test.npy")
+    joblib.dump(y_train, path + "y_train.npy")
+    joblib.dump(y_test, path + "y_test.npy")
+    if X_val is not None:
+        joblib.dump(X_val, path + "X_val.npy")
+
+    if y_val is not None:
+        joblib.dump(y_val, path + "y_val.npy")
