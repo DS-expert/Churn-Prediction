@@ -1,10 +1,14 @@
 import pytest
-from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, remove_outliers, preprocessing_pipeline
+from src.utils.config import load_config
+from src.data.preprocessing import handle_missing_values, drop_feature, Encoder, scaling, remove_outliers, preprocessing_pipeline, save_preprocessed_data
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-import pytest_check as check
+from pytest_check import check
 import numpy as np
+from pathlib import Path
+
+config = load_config()
 
 def test_handle_missing_values():
     # Arrange
@@ -251,3 +255,49 @@ def test_preprocessing_pipeline():
         numeric_checker_for_val = True
 
     check.equal(numeric_checker_for_val, True, "Return Validation set should have numeric data.")
+
+# Testing for save_preprocessed_data():
+def test_save_preprocessed_data():
+    #Arrange
+
+    train_features_data = {
+            "feature_A": [10.2, 11.1, 10.5, 10.8, 11.0, 10.5],  # Normal data (around 10-11)
+            "feature_B": [20.5, 19.8, 21.0, 20.2, 19.9, 22.0],  # Normal data (around 20)
+            "feature_C": [10.1, 10.5, 950.0, 10.3, 10.9, 11.1], # OUTLIER: 950.0 is abnormally high
+            "feature_D": [15.2, 14.8, 15.1, 15.5, 14.9, 15.6],  # Normal data (around 15)
+            "feature_E": [50.1, 49.8, -800.0, 50.5, 50.2, 50.4],
+            "Contract": ["Month-to-month", "One year", np.nan, "Two year", "Month-to-month", np.nan],
+            "InternetService": ["DSL", np.nan, "Fiber optic", "DSL", np.nan, "Fiber optic"],
+            "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", np.nan, "Credit card", "Electronic check"],
+            "Churn": ["Yes", "No", "No", "Yes", "No", "Yes"] # OUTLIER: -800.0 is abnormally low
+            }
+    test_features_data = {
+                "feature_A": [10.2, 11.1, 10.5, 10.8],  # Normal data (around 10-11)
+                "feature_B": [20.5, 19.8, 21.0, 20.2],  # Normal data (around 20)
+                "feature_C": [10.1, 10.5, 950.0, 10.3], # OUTLIER: 950.0 is abnormally high
+                "feature_D": [15.2, 14.8, 15.1, 15.5],  # Normal data (around 15)
+                "feature_E": [50.1, 49.8, -800.0, 50.5],
+                "Contract": ["Month-to-month", "One year", np.nan, "Two year"],
+                "InternetService": ["DSL", np.nan, "Fiber optic", "DSL"],
+                "PaymentMethod": ["Electronic check", "Mailed check", "Bank transfer", np.nan],
+                "Churn": ["Yes", "No", "No", "Yes"] # OUTLIER: -800.0 is abnormally low
+                }
+
+    train_df = pd.DataFrame(train_features_data)
+    test_df = pd.DataFrame(test_features_data)
+
+    X_train = train_df.drop(columns=["Churn"])
+    y_train = train_df["Churn"]
+    X_test = test_df.drop(columns=["Churn"])
+    y_test = test_df["Churn"]
+
+    # Split train into Validation
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+
+    #act
+    save_preprocessed_data(config["paths"]["preprocessed_data_dir"], X_train, X_test, y_train, y_test, X_val=X_val, y_val=y_val)
+
+    #assert
+    target_file = Path(config["paths"]["X_train_preprocessed"])
+    with check:
+        assert target_file.is_file(), f"Expected file {config["paths"]["X_train_preprocessed"]} to exist"
