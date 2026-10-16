@@ -233,3 +233,21 @@ def test_preprocessing_pipeline():
     # check.greater(test_df.shape[1], test_result3.shape[1], "There should be less feature in test results")
     # check.equal(result3.shape[1], test_result3.shape[1], "Both result and test result should have same features.")
     
+    #act
+    result_train, result_val, result_test, result_train_label, result_val_label, result_test_label = preprocessing_pipeline(df=df, target_feature="Churn")
+    
+    #assert
+
+    check.is_instance(result_train, np.ndarray, "Return result should be in numpy array.")
+    check.equal(result_train.shape[0], result_train_label.shape[0], "Training data and label should have same instances.")
+    numeric_checker = False
+    if result_train.dtype.kind in 'biufc':
+        numeric_checker = True
+
+    check.equal(numeric_checker, True, "Return numpy array should have numerical values.")
+
+    numeric_checker_for_val = False
+    if result_val.dtype.kind in "biufc":
+        numeric_checker_for_val = True
+
+    check.equal(numeric_checker_for_val, True, "Return Validation set should have numeric data.")
