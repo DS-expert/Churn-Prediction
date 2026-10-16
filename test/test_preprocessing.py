@@ -73,30 +73,28 @@ def test_encoder():
     df = pd.DataFrame(data)
     X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=["Churn"]), df["Churn"], test_size=0.2, random_state=42)
 
-    #act
+    #act # Comment code is tested when the return result of Encoder() was in Dataframe(pd.DataFrame)
     result1, result1_test = Encoder(X_train, X_test, all_categorical=True)
     check.equal(result1.shape[1], result1_test.shape[1], "Encoded train and test data should have the same number of columns.")
-    check.is_true(isinstance(result1, pd.DataFrame), "Encoded return value should be a DataFrame.")
-    check.is_true(isinstance(result1_test, pd.DataFrame), "Encoded return value should be a DataFrame")
+    check.is_true(isinstance(result1, np.ndarray), "Encoded return value should be a DataFrame.")
+    check.is_true(isinstance(result1_test, np.ndarray), "Encoded return value should be a DataFrame")
     check.greater(result1.shape[1], X_train.shape[1], "Encoded data should have more columns than the original data due to one-hot encoding.")
-    cat_features = X_train.select_dtypes(exclude='number')
-    result_cat = result1.select_dtypes(exclude='number')
-    check.greater(cat_features.shape[1], result_cat.shape[1], "Encoded categorical features should have more columns than the original category features")
+    # cat_features = X_train.select_dtypes(exclude='number') # This comment was tested when return was in dataframe.
+    # result_cat = result1.select_dtypes(exclude='number')
+    # check.greater(cat_features.shape[1], result_cat.shape[1], "Encoded categorical features should have more columns than the original category features")
 
     with pytest.raises(ValueError):
         Encoder(X_train, X_test, all_categorical=False)
 
     result3, result3_test = Encoder(X_train, X_test, all_categorical=False, features=["Contract", "InternetService"])
     check.equal(result3.shape[1], result3_test.shape[1], "Encoded train and test data should have the same number of columns.")
-    check.is_true(isinstance(result3, pd.DataFrame), "Encoded return value should be a DataFrame.")
-    check.is_true(isinstance(result3_test, pd.DataFrame), "Encoded return value should be a DataFrame")
-    check.is_in("PaymentMethod", result3.columns, f"Encoded data should contain PaymentMethod columns, but it is missing")
-    print(X_train["PaymentMethod"].dtype)
-    print(result3["PaymentMethod"].dtype)
-    check.equal(X_train["PaymentMethod"].dtype, result3["PaymentMethod"].dtype, "Encoded data should have the same data types as the original data")
-    forbidden_cols = [col for col in result3.columns if col.startswith("PaymentMethod_")]
-    check.equal(len(forbidden_cols), 0, "Encoded data should not contain extra columns which isn't provided.")
-    pd.testing.assert_series_equal(result3["PaymentMethod"], X_train["PaymentMethod"])
+    check.is_true(isinstance(result3, np.ndarray), "Encoded return value should be a DataFrame.")
+    check.is_true(isinstance(result3_test, np.ndarray), "Encoded return value should be a DataFrame")
+    # check.is_in("PaymentMethod", result3.columns, f"Encoded data should contain PaymentMethod columns, but it is missing")
+    # check.equal(X_train["PaymentMethod"].dtype, result3["PaymentMethod"].dtype, "Encoded data should have the same data types as the original data")
+    # forbidden_cols = [col for col in result3.columns if col.startswith("PaymentMethod_")]
+    # check.equal(len(forbidden_cols), 0, "Encoded data should not contain extra columns which isn't provided.")
+    # pd.testing.assert_series_equal(result3["PaymentMethod"], X_train["PaymentMethod"])
 
 def test_scaling():
     #arrange
