@@ -204,7 +204,7 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
 
-def save_preprocessed_data(path: str, X, X_test, y_train, y_test, X_val=None, y_val=None):
+def save_preprocessed_data(X, X_test, y_train, y_test, X_val=None, y_val=None):
     joblib.dump(X, config["paths"]["X_train_preprocessed"])
     joblib.dump(X_test, config["paths"]["X_test_preprocessed"])
     joblib.dump(y_train, config["paths"]["y_train_preprocessed"])
