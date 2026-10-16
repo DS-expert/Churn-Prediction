@@ -8,6 +8,7 @@ from typing import Literal
 from sklearn.model_selection import train_test_split
 from feature_engine.outliers import ArbitraryOutlierCapper
 import joblib
+from scipy import sparse
 
 config = load_config()
 
@@ -48,7 +49,7 @@ def drop_feature(df, features: list):
     return df_drop
 
 def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
-    encoder = OneHotEncoder(drop="first", sparse_output=False, handle_unknown='ignore')
+    encoder = OneHotEncoder(sparse_output=True, handle_unknown='ignore')
 
     if all_categorical:
         cat_features = X.select_dtypes(exclude='number').columns
@@ -56,30 +57,30 @@ def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
         if not features:
             raise ValueError("Please provide the list of categorical features to encode.")
         cat_features = features
+    num_features = X.select_dtypes(include="number").columns
 
-    encoded_arr = encoder.fit_transform(X[cat_features])
-    test_encoded_arr = encoder.transform(X_test[cat_features])
-    if X_val is not None:
-        val_encoded_arr = encoder.transform(X_val[cat_features])
+    X_num = X[num_features].to_numpy(dtype=np.float32)
+    X_test_num = X_test[num_features].to_numpy(dtype=np.float32)
 
-    encoded_cols = encoder.get_feature_names_out(cat_features)
-    encoded_df = pd.DataFrame(encoded_arr, columns=encoded_cols, index=X.index)
-    encoded_df = pd.concat([X.drop(columns=cat_features), encoded_df], axis=1)
-    test_encoded_df = pd.DataFrame(test_encoded_arr, columns=encoded_cols, index=X_test.index) # type: ignore
-    test_encoded_df = pd.concat([X_test.drop(columns=cat_features), test_encoded_df], axis=1)
+    encoded_sparse = encoder.fit_transform(X[cat_features])
+    test_encoded_sparse = encoder.transform(X_test[cat_features])
+
+    X_encoded = sparse.hstack([X_num, encoded_sparse]).tocsr()
+    X_test_encoded = sparse.hstack([X_test_num, test_encoded_sparse]).tocsr()
+
     if X_val is not None:
-        val_encoded_df = pd.DataFrame(val_encoded_arr, columns=encoded_cols, index=X_val.index)
-        val_encoded_df = pd.concat([X_val.drop(columns=cat_features), val_encoded_df], axis=1)
-        X_val_encoded = val_encoded_df.to_numpy()
-    X_encoded = encoded_df.to_numpy()
-    X_test_encoded = test_encoded_df.to_numpy()
-    if X_val is not None:
+        X_val_num = X_val[num_features].to_numpy(dtype=np.float32)
+        val_encoded_sparse = encoder.transform(X_val[cat_features])
+        X_val_encoded = sparse.hstack([X_val_num, val_encoded_sparse]).tocsr()
+
         return X_encoded, X_val_encoded, X_test_encoded
     else:
         return X_encoded, X_test_encoded
 
+    
+
 def scaling(X, X_test, X_val=None):
-    scaler = StandardScaler()
+    scaler = StandardScaler(with_mean=False)
     X_scaled = scaler.fit_transform(X)
     X_test_scaled = scaler.transform(X_test)
 
@@ -186,7 +187,8 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
     if test_dataset is not None:
         X_train = df.drop(columns=[target_feature])
         y_train = df[target_feature]
-        X_test = test_dataset
+        X_test = test_dataset.drop(columns=[target_feature])
+        y_test = test_dataset[target_feature]
     else:
         X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target_feature]), df[target_feature], test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
 
