@@ -219,4 +219,4 @@ def save_preprocessed_data(X, X_test, y_train, y_test=None, X_val=None, y_val=No
         joblib.dump(X_val, config["paths"]["X_val_preprocessed"])
 
     if y_val is not None:
-        joblib.dump(y_val, config["paths"]["X_val_preprocessed"])
+        joblib.dump(y_val, config["paths"]["y_val_preprocessed"])
