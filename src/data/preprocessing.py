@@ -187,7 +187,7 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
     if test_dataset is not None:
         X_train = df.drop(columns=[target_feature])
         y_train = df[target_feature]
-        X_test = test_dataset.drop(columns=[target_feature])
+        X_test = test_dataset
         # y_test = test_dataset[target_feature]  - ytest label can't be created because there is no test labels in test dataset.
     else:
         X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target_feature]), df[target_feature], test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
@@ -200,20 +200,21 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
     # Scaling
     X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
-    
+
     if test_dataset is not None:
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val
     
     return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
 
 
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
 
-def save_preprocessed_data(X, X_test, y_train, y_test, X_val=None, y_val=None):
+def save_preprocessed_data(X, X_test, y_train, y_test=None, X_val=None, y_val=None):
     joblib.dump(X, config["paths"]["X_train_preprocessed"])
     joblib.dump(X_test, config["paths"]["X_test_preprocessed"])
     joblib.dump(y_train, config["paths"]["y_train_preprocessed"])
-    joblib.dump(y_test, config["paths"]["y_test_preprocessed"])
+    if y_test is not None:
+        joblib.dump(y_test, config["paths"]["y_test_preprocessed"])
     if X_val is not None:
         joblib.dump(X_val, config["paths"]["X_val_preprocessed"])
 

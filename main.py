@@ -17,10 +17,10 @@ def main():
     test_df = pd.read_csv(test_raw_data)
 
     # Give these dataframes to preprocessing pipeline.
-    X_train_encoded, X_val_encoded, X_test_encoded, y_train_encoded, y_val_encoded, y_test_encoded = preprocessing_pipeline(df=train_df, test_dataset=test_df, drop_features=["UserRating", "CustomerID"])
+    X_train_encoded, X_val_encoded, X_test_encoded, y_train_encoded, y_val_encoded = preprocessing_pipeline(df=train_df, test_dataset=test_df, drop_features=["UserRating", "CustomerID"])
 
     #Save the preprocessed data
-    save_preprocessed_data(X_train_encoded, X_test_encoded, y_train_encoded, y_test_encoded, X_val=X_val_encoded, y_val=y_val_encoded)
+    save_preprocessed_data(X_train_encoded, X_test_encoded, y_train_encoded, X_val=X_val_encoded, y_val=y_val_encoded)
 
 
 if __name__ == "__main__":
