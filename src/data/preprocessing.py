@@ -94,7 +94,7 @@ def scaling(X, X_test, X_val=None):
 # Function for Outliers Removal
 # Function for Validation set and transform in preprocesser() function.
 
-def remove_outliers(df: pd.DataFrame, features=None):
+def remove_outliers(df: pd.DataFrame, features=None, target_feature='Churn') -> pd.DataFrame:
     """
     Remove outliers from the dataframe using the IQR method.
     
@@ -115,8 +115,10 @@ def remove_outliers(df: pd.DataFrame, features=None):
 
     if features is not None:
         features = [col for col in features if col in df.columns]
+        features.remove(target_feature) if target_feature in features else None
     else:
         features = df.select_dtypes(include='number').columns.tolist()
+        features.remove(target_feature) if target_feature in features else None
     
     if not features:
         return df
@@ -145,7 +147,7 @@ def validation_set(X_train, y_train):
         y_train: training target labels
         y_val: validation target labels
      """
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=config["data"]["test_size"], random_state=config["data"]["random_state"], stratify=y_train)
 
     return X_train, X_val, y_train, y_val
 
@@ -176,14 +178,13 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
     # drop features from dataset if have
     if drop_features is not None:
-        df_semi_prep = drop_feature(df, features=drop_features)
+        df_semi_prep = drop_feature(df_semi_prep, features=drop_features)
 
         # if test_dataset is not None:
         #     test_df_semi_prep = drop_feature(test_df_semi_prep, features=drop_features)
 
     cat_features = df.select_dtypes(exclude='number').columns.tolist()
     num_features = df.select_dtypes(include='number').columns.tolist()
-
     # remove outliers from dataset
     df_semi_prep_without_outliers = remove_outliers(df_semi_prep)
 
@@ -192,7 +193,6 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
         test_df_semi_prep = handle_missing_values(test_dataset)
         if drop_features is not None:
             test_df_semi_prep = drop_feature(test_df_semi_prep, features=drop_features)
-    
         X_train = df_semi_prep_without_outliers.drop(columns=[target_feature])
         y_train = df_semi_prep_without_outliers[target_feature]
         X_test = test_df_semi_prep
@@ -211,7 +211,8 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
             df_semi_prep_without_outliers.drop(columns=[target_feature]), 
             df_semi_prep_without_outliers[target_feature], 
             test_size=config["data"]["test_size"], 
-            random_state=config["data"]["random_state"])
+            random_state=config["data"]["random_state"],
+            stratify=df_semi_prep_without_outliers[target_feature])
 
         # then split into train and validation set
         X_train, X_val, y_train, y_val = validation_set(X_train=X_train, y_train=y_train)
