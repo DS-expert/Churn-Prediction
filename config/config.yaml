@@ -10,12 +10,12 @@ paths:
   preprocessed_data_dir: "data/preprocessed"
   model_dir: "models"
   output_dir: "output"
-  X_train_preprocessed: "data/preprocessed/X_train.npy"
-  X_test_preprocessed: "data/preprocessed/X_test.npy"
-  X_val_preprocessed: "data/preprocessed/X_val.npy"
-  y_train_preprocessed: "data/preprocessed/y_train.npy"
-  y_test_preprocessed: "data/preprocessed/y_test.npy"
-  y_val_preprocessed: "data/preprocessed/y_val.npy"
+  X_train_preprocessed: "data/preprocessed/X_train.joblib"
+  X_test_preprocessed: "data/preprocessed/X_test.joblib"
+  X_val_preprocessed: "data/preprocessed/X_val.joblib"
+  y_train_preprocessed: "data/preprocessed/y_train.joblib"
+  y_test_preprocessed: "data/preprocessed/y_test.joblib"
+  y_val_preprocessed: "data/preprocessed/y_val.joblib"
 
 data:
   test_size: 0.2
