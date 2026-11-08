@@ -170,12 +170,16 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
     # Handle missing values
     df_semi_prep = handle_missing_values(df=df)
-    if test_dataset is not None:
-        test_df_semi_prep = handle_missing_values(test_dataset)
+
+    # if test_dataset is not None:
+    #     test_df_semi_prep = handle_missing_values(test_dataset)
+
     # drop features from dataset if have
     if drop_features is not None:
         df_semi_prep = drop_feature(df, features=drop_features)
-        test_df_semi_prep = drop_feature(df, features=drop_features)
+
+        # if test_dataset is not None:
+        #     test_df_semi_prep = drop_feature(test_df_semi_prep, features=drop_features)
 
     cat_features = df.select_dtypes(exclude='number').columns.tolist()
     num_features = df.select_dtypes(include='number').columns.tolist()
@@ -185,26 +189,40 @@ def preprocessing_pipeline(df: pd.DataFrame, test_dataset=None, drop_features=No
 
     # Split the data into train, VAl and testing
     if test_dataset is not None:
-        X_train = df.drop(columns=[target_feature])
-        y_train = df[target_feature]
-        X_test = test_dataset
-        # y_test = test_dataset[target_feature]  - ytest label can't be created because there is no test labels in test dataset.
-    else:
-        X_train, X_test, y_train, y_test = train_test_split(df.drop(columns=[target_feature]), df[target_feature], test_size=config["data"]["test_size"], random_state=config["data"]["random_state"])
-
-    # then split into train and validation set
-    X_train, X_val, y_train, y_val = validation_set(X_train=X_train, y_train=y_train)
-
-    #Encode the Split data
-    X_train_encoded, X_val_encoded, X_test_encoded = Encoder(X_train, X_test, X_val=X_val)
-
-    # Scaling
-    X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
-
-    if test_dataset is not None:
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val
+        test_df_semi_prep = handle_missing_values(test_dataset)
+        if drop_features is not None:
+            test_df_semi_prep = drop_feature(test_df_semi_prep, features=drop_features)
     
-    return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
+        X_train = df_semi_prep_without_outliers.drop(columns=[target_feature])
+        y_train = df_semi_prep_without_outliers[target_feature]
+        X_test = test_df_semi_prep
+        # y_test = test_dataset[target_feature]  - ytest label can't be created because there is no test labels in test dataset.
+        #Split into train and validation set
+        X_train, X_val, y_train, y_val = validation_set(X_train=X_train, y_train=y_train)
+        #Transform
+        X_train_encoded, X_val_encoded, X_test_encoded = Encoder(X_train, X_test, X_val=X_val)
+        X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
+
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val
+
+    else:
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            df_semi_prep_without_outliers.drop(columns=[target_feature]), 
+            df_semi_prep_without_outliers[target_feature], 
+            test_size=config["data"]["test_size"], 
+            random_state=config["data"]["random_state"])
+
+        # then split into train and validation set
+        X_train, X_val, y_train, y_val = validation_set(X_train=X_train, y_train=y_train)
+
+        #Encode the Split data
+        X_train_encoded, X_val_encoded, X_test_encoded = Encoder(X_train, X_test, X_val=X_val)
+
+        # Scaling
+        X_train_scaled, X_val_scaled, X_test_scaled = scaling(X_train_encoded, X_test_encoded, X_val=X_val_encoded)
+
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test
 
 
 # Complete preprocessing_pipeline(), Add Encoding and Scaling and spliting also Imbalanced Dataset(optional).
