@@ -65,13 +65,13 @@ def Encoder(X, X_test, all_categorical: bool = True, X_val=None, features=None):
     encoded_sparse = encoder.fit_transform(X[cat_features])
     test_encoded_sparse = encoder.transform(X_test[cat_features])
 
-    X_encoded = sparse.hstack([X_num, encoded_sparse]).tocsr()
-    X_test_encoded = sparse.hstack([X_test_num, test_encoded_sparse]).tocsr()
+    X_encoded = sparse.hstack([X_num, encoded_sparse]).toarray()
+    X_test_encoded = sparse.hstack([X_test_num, test_encoded_sparse]).toarray()
 
     if X_val is not None:
         X_val_num = X_val[num_features].to_numpy(dtype=np.float32)
         val_encoded_sparse = encoder.transform(X_val[cat_features])
-        X_val_encoded = sparse.hstack([X_val_num, val_encoded_sparse]).tocsr()
+        X_val_encoded = sparse.hstack([X_val_num, val_encoded_sparse]).toarray()
 
         return X_encoded, X_val_encoded, X_test_encoded
     else:
